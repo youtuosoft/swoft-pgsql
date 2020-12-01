@@ -18,7 +18,7 @@ return [
         'class'     => \Swoft\Pgsql\Pool::class,
         'pgsqlDb'   => bean('pgsql'),
         'minActive' => 2,
-        'mixActive' => 20,
+        'maxActive' => 20,
         'maxWait'   => 0,
         'maxWaitTime' => 0,
         'maxIdleTime' => 60,

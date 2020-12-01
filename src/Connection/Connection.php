@@ -23,7 +23,10 @@ use Throwable;
  */
 abstract class Connection extends AbstractConnection implements ConnectionInterface
 {
-
+    /**
+     * Link available heart time interval, default 10 second(s)
+     */
+    const HEARTTIME_INTERVAL = 10;
     /**
      * @var Pgsql
      */
@@ -40,6 +43,11 @@ abstract class Connection extends AbstractConnection implements ConnectionInterf
     protected $pgsqlDb;
 
     /**
+     * @var Int
+     */
+    private $hearttime;
+
+    /**
      * @param Pool    $pool
      * @param PgsqlDb $pgsqlDb
      */
@@ -48,6 +56,7 @@ abstract class Connection extends AbstractConnection implements ConnectionInterf
         $this->pool     = $pool;
         $this->pgsqlDb  = $pgsqlDb;
         $this->lastTime = time();
+        $this->hearttime = 0;
 
         $this->id = $this->pool->getConnectionId();
     }
@@ -60,6 +69,7 @@ abstract class Connection extends AbstractConnection implements ConnectionInterf
     public function create(): void
     {
         $this->createClient();
+        $this->hearttime = time();
     }
 
     /**
@@ -139,6 +149,31 @@ abstract class Connection extends AbstractConnection implements ConnectionInterf
     }
 
     /**
+     * Check Link available.
+     *
+     * @return boolean
+     */
+    public function ping()
+    {
+        if ($this->hearttime === null) {
+            $this->hearttime = 0;
+        }
+
+        if ((time() - $this->hearttime) < self::HEARTTIME_INTERVAL) {
+            return true;
+        }
+
+        $res = $this->client->query("SELECT 1");
+        if ($res) {
+            $this->hearttime = time();
+            return true;
+        } else {
+
+            return false;
+        }
+    }
+
+    /**
      * Reconnect to the database if a connection is missing.
      *
      * @return void
@@ -146,6 +181,8 @@ abstract class Connection extends AbstractConnection implements ConnectionInterf
     protected function reconnectIfMissingConnection()
     {
         if (is_null($this->client)) {
+            $this->reconnect();
+        } else if (!$this->ping()) {
             $this->reconnect();
         }
     }
@@ -239,5 +276,11 @@ abstract class Connection extends AbstractConnection implements ConnectionInterf
         $result = pg_copy_from($this->pgresource, $table_name, $rows, $delimiter, $null_as);
         $this->pgClose();
         return $result;
+    }
+
+    public function getClient()
+    {
+        $this->reconnectIfMissingConnection();
+        return $this->client;
     }
 }

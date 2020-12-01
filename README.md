@@ -14,7 +14,7 @@ Swoft PostgreSQL Component
 - composer command
 
 ```bash
-composer require curtis18/swoft-pgsql
+composer require youtuosoft/swoft-pgsql
 ```
 
 ## Resources
@@ -30,3 +30,11 @@ composer require curtis18/swoft-pgsql
 ## LICENSE
 
 The Component is open-sourced software licensed under the [Apache license](LICENSE).
+
+
+## ChangeLog
+
+|file|detail|reason|  
+|-----|---------------------|---------|
+|src/Connection/Connection.php|ping(),getClient()|need reconnect when pipe breaked|  
+|composer.json|name `curtis18/swoft-pgsql`->`youtuosoft/swoft-pgsql`||
